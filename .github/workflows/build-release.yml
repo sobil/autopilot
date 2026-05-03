@@ -1,0 +1,61 @@
+name: Build & Release ESP32 Binary
+
+on:
+  push:
+    tags:
+      - 'v*'
+    branches:
+      - '**'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    name: Build and publish ESP32 binary
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install arduino-cli
+        uses: arduino/setup-arduino-cli@v2
+
+      - name: Add ESP32 board platform
+        run: |
+          arduino-cli config init
+          arduino-cli config add board_manager.additional_urls \
+            https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
+          arduino-cli core update-index
+          arduino-cli core install esp32:esp32
+
+      - name: Compile sketch for ESP32 DOIT DevKit V1
+        run: |
+          arduino-cli compile \
+            --fqbn esp32:esp32:esp32doit-devkit-v1 \
+            --output-dir /tmp/build \
+            ${{ github.workspace }}
+
+      - name: Determine release metadata
+        id: meta
+        run: |
+          if [[ "${{ github.ref_type }}" == "tag" ]]; then
+            echo "tag=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
+            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=${{ github.ref_name }}-$(git rev-parse --short=7 HEAD)" >> "$GITHUB_OUTPUT"
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create GitHub Release and upload binary
+        uses: softprops/action-gh-release@v2
+        with:
+          files: /tmp/build/autopilot-main.ino.bin
+          tag_name: ${{ steps.meta.outputs.tag }}
+          name: "Autopilot ${{ steps.meta.outputs.tag }}"
+          prerelease: ${{ steps.meta.outputs.prerelease == 'true' }}
+          body: |
+            ESP32 DOIT DevKit V1 binary for autopilot firmware ${{ steps.meta.outputs.tag }}.
+
+            Flash using the [Web Flasher](http://nautinect.com/firmware-flasher) or Arduino IDE.
