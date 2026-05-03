@@ -4,6 +4,9 @@ on:
   push:
     tags:
       - 'v*'
+    branches:
+      - '*-beta'
+      - '*beta'
 
 permissions:
   contents: write
@@ -35,12 +38,25 @@ jobs:
             --output-dir /tmp/build \
             ${{ github.workspace }}
 
+      - name: Determine release metadata
+        id: meta
+        run: |
+          if [[ "${{ github.ref_type }}" == "tag" ]]; then
+            echo "tag=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
+            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=${{ github.ref_name }}-$(git rev-parse --short=7 HEAD)" >> "$GITHUB_OUTPUT"
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Create GitHub Release and upload binary
         uses: softprops/action-gh-release@v2
         with:
           files: /tmp/build/autopilot-main.ino.bin
-          name: "Autopilot ${{ github.ref_name }}"
+          tag_name: ${{ steps.meta.outputs.tag }}
+          name: "Autopilot ${{ steps.meta.outputs.tag }}"
+          prerelease: ${{ steps.meta.outputs.prerelease == 'true' }}
           body: |
-            ESP32 DOIT DevKit V1 binary for autopilot firmware ${{ github.ref_name }}.
+            ESP32 DOIT DevKit V1 binary for autopilot firmware ${{ steps.meta.outputs.tag }}.
 
             Flash using the [Web Flasher](http://nautinect.com/firmware-flasher) or Arduino IDE.
