@@ -59,9 +59,28 @@ If your computer does not recognize the ESP32 when you plug it in, install the *
 ## Installation Methods
 
 ### 1. Web Flasher (EASY)  
-👉 [http://nautinect.com/firmware-flasher](http://nautinect.com/firmware-flasher)  
+👉 [http://nautinect.com/firmware-flasher](http://nautinect.com/firmware-flasher)
 
-### 2. Arduino SDK V2 (ADVANCED)
+### 2. esptool (INTERMEDIATE)
+
+Download the latest pre-built binary from the [Releases](../../releases) page (`autopilot-main.ino.bin`) and flash it using [esptool](https://github.com/espressif/esptool):
+
+```bash
+pip install esptool
+esptool.py --port /dev/ttyUSB0 --baud 460800 write_flash 0x10000 autopilot-main.ino.bin
+```
+
+> **Flash offset**: `0x10000` — this is the standard application partition offset for ESP32 (arduino-esp32).  
+> Replace `/dev/ttyUSB0` with your actual COM port (e.g. `COM3` on Windows, `/dev/cu.usbserial-*` on macOS).
+
+To perform a full erase before flashing (recommended for a clean install):
+
+```bash
+esptool.py --port /dev/ttyUSB0 erase_flash
+esptool.py --port /dev/ttyUSB0 --baud 460800 write_flash 0x10000 autopilot-main.ino.bin
+```
+
+### 3. Arduino SDK V2 (ADVANCED)
 1. Download and install [Arduino IDE V2](https://www.arduino.cc/en/software)  
 2. Go to **Tools → Board Manager**, search for `esp32`, and install **ESP32 by Espressif Systems**.  
 3. Create a folder named `autopilot_basic`.  
