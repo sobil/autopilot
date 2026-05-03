@@ -5,8 +5,7 @@ on:
     tags:
       - 'v*'
     branches:
-      - '*-beta'
-      - '*beta'
+      - '**'
 
 permissions:
   contents: write
