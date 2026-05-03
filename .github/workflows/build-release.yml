@@ -32,10 +32,12 @@ jobs:
 
       - name: Compile sketch for ESP32 DOIT DevKit V1
         run: |
+          mkdir -p /tmp/sketch/autopilot-main
+          cp ${{ github.workspace }}/*.ino ${{ github.workspace }}/*.cpp ${{ github.workspace }}/*.h /tmp/sketch/autopilot-main/
           arduino-cli compile \
             --fqbn esp32:esp32:esp32doit-devkit-v1 \
             --output-dir /tmp/build \
-            ${{ github.workspace }}/autopilot-main.ino
+            /tmp/sketch/autopilot-main
 
       - name: Determine release metadata
         id: meta
