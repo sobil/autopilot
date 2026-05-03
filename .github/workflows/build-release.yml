@@ -35,7 +35,7 @@ jobs:
           arduino-cli compile \
             --fqbn esp32:esp32:esp32doit-devkit-v1 \
             --output-dir /tmp/build \
-            ${{ github.workspace }}
+            ${{ github.workspace }}/autopilot-main.ino
 
       - name: Determine release metadata
         id: meta
